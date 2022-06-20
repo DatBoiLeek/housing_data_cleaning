@@ -1,4 +1,7 @@
 USE housingproject;
+# 6/17/2022
+-- Updated tables to add nulls to empty strings.
+-- Removed all data redundancies in the ParcelID & Property Address columns.
 
 #Updating table to add nulls to empty strings------------------------------------------------------------------------
 
@@ -60,6 +63,7 @@ THEN NULL ELSE HalfBath END;
 
 /*
 Cleaning Data Queries-----------------------------------------------------------------------------------------------------------------
+6/20/2022
 */
 
 # ParcelID & Property Address contains data redundancies
@@ -90,3 +94,27 @@ SELECT *
 FROM nashville_housing
 ORDER BY ParcelID;
 
+-- Turn addresses into individual columns (Address, City, State)------------------------------------------------------------------------------------
+SELECT PropertyAddress
+FROM nashville_housing
+ORDER BY PropertyAddress;
+
+# Use SUBSTRING in PropertyAddress column to find addresses and stop once you get to the comma. 
+# Use -1 to remove comma from results.
+# To grab the city, locate the comma and use + 1 to grab everything after it.
+SELECT SUBSTRING(PropertyAddress, 1, LOCATE(',', PropertyAddress) -1) AS Address,
+SUBSTRING(PropertyAddress FROM (LOCATE(',', PropertyAddress) + 1 )) AS City
+FROM nashville_housing;
+
+#Alter and update Nashville table with the property address & property city separated using previous select statement.
+ALTER TABLE nashville_housing
+ADD PropertySplitAddress VARCHAR (500);
+
+UPDATE nashville_housing
+SET PropertySplitAddress = SUBSTRING(PropertyAddress, 1, LOCATE(',', PropertyAddress) -1);
+
+ALTER TABLE nashville_housing
+ADD PropertySplitCity VARCHAR (500);
+
+UPDATE nashville_housing
+SET PropertySplitCity = SUBSTRING(PropertyAddress FROM (LOCATE(',', PropertyAddress) + 1 ));
