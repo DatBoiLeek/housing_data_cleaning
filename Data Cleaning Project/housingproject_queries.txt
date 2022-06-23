@@ -16,6 +16,7 @@ THEN NULL ELSE LandUse END,
 
 PropertyAddress = CASE PropertyAddress WHEN '' 
 THEN NULL ELSE PropertyAddress END,
+
 SaleDate = CASE SaleDate WHEN '' 
 THEN NULL ELSE SaleDate END,
 
@@ -94,7 +95,7 @@ SELECT *
 FROM nashville_housing
 ORDER BY ParcelID;
 
--- Turn addresses into individual columns (Address, City, State)------------------------------------------------------------------------------------
+-- Turn addresses into normalized individual columns for "Property Address" (Address, City, State)------------------------------------------------------------------------------------
 SELECT PropertyAddress
 FROM nashville_housing
 ORDER BY PropertyAddress;
@@ -106,7 +107,14 @@ SELECT SUBSTRING(PropertyAddress, 1, LOCATE(',', PropertyAddress) -1) AS Address
 SUBSTRING(PropertyAddress FROM (LOCATE(',', PropertyAddress) + 1 )) AS City
 FROM nashville_housing;
 
-#Alter and update Nashville table with the property address & property city separated using previous select statement.
+/* ALTERNATIVE METHOD USING SUBSTRING_INDEX
+As of 6/22/2022
+SELECT SUBSTRING_INDEX(PropertyAddress, ',', 1) AS PropertySplitAddress,
+SUBSTRING_INDEX(PropertyAddress, ',', -1) AS PropertySplitCity
+FROM nashville_housing;
+*/
+
+# Alter and update Nashville table with the normalized Property Address, city, & state using previous select statement.
 ALTER TABLE nashville_housing
 ADD PropertySplitAddress VARCHAR (500);
 
@@ -118,3 +126,36 @@ ADD PropertySplitCity VARCHAR (500);
 
 UPDATE nashville_housing
 SET PropertySplitCity = SUBSTRING(PropertyAddress FROM (LOCATE(',', PropertyAddress) + 1 ));
+
+/*
+6/22/2022 
+*/
+-- Turn addresses into normalized individual columns for "OwnerAddress" -------------------------------------------------------------------------------------------------------
+# Use SUBSTRING_INDEX this time instead of regular SUBSTRING
+SELECT SUBSTRING_INDEX(OwnerAddress,',', 1) AS OwnerStreetAddress,
+SUBSTRING_INDEX(SUBSTRING_INDEX(OwnerAddress, ',', 2), ',', -1) AS OwnerCity,
+SUBSTRING_INDEX(OwnerAddress,',', -1) AS OwnerState
+FROM nashville_housing;
+
+SELECT SUBSTRING_INDEX(PropertyAddress, ',', 1),
+SUBSTRING_INDEX(PropertyAddress, ',', -1)
+FROM nashville_housing;
+
+# Alter and update Nashville table with the normalized OwnerAddress, city, & state using previous select statement.
+ALTER TABLE nashville_housing
+ADD OwnerStreetAddress VARCHAR (500);
+
+UPDATE nashville_housing
+SET OwnerStreetAddress = SUBSTRING_INDEX(OwnerAddress,',', 1);
+
+ALTER TABLE nashville_housing
+ADD OwnerSplitCity VARCHAR (500);
+
+UPDATE nashville_housing
+SET OwnerSplitCity = SUBSTRING_INDEX(SUBSTRING_INDEX(OwnerAddress, ',', 2), ',', -1);
+
+ALTER TABLE nashville_housing
+ADD OwnerSplitState VARCHAR (500);
+
+UPDATE nashville_housing
+SET OwnerSplitState = SUBSTRING_INDEX(OwnerAddress,',', -1);
