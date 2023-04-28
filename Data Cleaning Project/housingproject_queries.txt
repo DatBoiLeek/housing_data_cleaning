@@ -215,6 +215,7 @@ WHERE row_num > 1
 ORDER BY PropertyAddress;
 
 -- Delete Unused columns.---------------------------------------------------------------------------------------------------------------------------------------------
+# 7/1/2022
 # Note: Only for this project will I be deleting redundant columns that go against normalization rules. Not a standard practice.
 ALTER TABLE nashville_housing
 DROP COLUMN OwnerAddress;
